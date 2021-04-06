@@ -7,3 +7,4 @@ private
 *.blend1
 __pycache__
 *secrets*
+*.egg-info
