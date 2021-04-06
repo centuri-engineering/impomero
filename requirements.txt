@@ -1,0 +1,5 @@
+ldap3
+omero-certificates
+omero-py
+toml
+zeroc-ice
