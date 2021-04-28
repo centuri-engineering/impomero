@@ -3,3 +3,4 @@ omero-certificates
 omero-py
 toml
 zeroc-ice
+pandas

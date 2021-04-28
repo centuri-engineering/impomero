@@ -5,7 +5,7 @@
 import os
 import logging
 import tempfile
-from datetime import date
+import env
 
 from pathlib import Path
 
@@ -14,6 +14,8 @@ import omero
 
 from omero.util import import_candidates
 from omero.cli import CLI
+from collector import create_import_table, get_configuration
+
 
 log = logging.getLogger(__name__)
 logfile = logging.FileHandler("auto_importer.log")
@@ -21,48 +23,59 @@ log.setLevel("INFO")
 log.addHandler(logfile)
 
 
-def auto_import(base_dir, dry_run=False, reset=True, clean=False):
+def auto_import(base_dir, dry_run=False, import_table=None, reset=True, clean=False):
+    """Automatically import image data from the directories bellow base_dir
+
+    The process starts by walking those directories to find annotation files.
+    An annotation file must contain a `username` and a `project` entry.
+
+
+
+
+    """
 
     base_dir = Path(base_dir)
-    conf = get_configuration(base_dir)
-
+    conf = get_configuration()
     conf["base_dir"] = base_dir
+    if not import_table or reset:
+        import_table = create_import_table(base_dir)
 
-    _, bulk_yml = tempfile.mkstemp(suffix=".yml", text=True)
-    log.info(f"creating bulk yaml {bulk_yml}")
+    if not "group" in import_table:
+        import_table["group"] = ""
 
-    _, tsv_file = tempfile.mkstemp(suffix=".tsv", text=True)
-    log.info(f"creating tsv_file {tsv_file}")
+    for (user, group), sub_table in import_table.groupby(["user", "group"]):
 
-    _, out_file = tempfile.mkstemp(suffix=".out", text=True)
-    log.info(f"creating out_file {out_file}")
+        _, bulk_yml = tempfile.mkstemp(suffix=".yml", text=True)
+        log.info(f"creating bulk yaml {bulk_yml}")
 
-    conf["bulk_yml"] = bulk_yml
-    conf["tsv_file"] = tsv_file
-    conf["out_file"] = out_file
+        _, tsv_file = tempfile.mkstemp(suffix=".tsv", text=True)
+        log.info(f"creating tsv_file {tsv_file}")
 
-    log.info("\n".join(f"{k}: {v}" for k, v in conf.items()))
+        _, out_file = tempfile.mkstemp(suffix=".out", text=True)
+        log.info(f"creating out_file {out_file}")
 
-    create_bulk_yml(bulk_yml=bulk_yml, dry_run=dry_run, path=tsv_file)
+        conf["username"] = user
+        conf["group"] = group
+        conf["bulk_yml"] = bulk_yml
+        conf["tsv_file"] = tsv_file
+        conf["out_file"] = out_file
 
-    if not Path(tsv_file).is_file() or reset:
-        candidates = import_candidates.as_dictionary(base_dir.as_posix())
-        create_bulk_tsv(candidates, base_dir, conf)
+        create_bulk_yml(bulk_yml=bulk_yml, dry_run=dry_run, path=tsv_file)
+        sub_table[["target", "fileset", "file_path"]].to_csv(tsv_file, sep="\t")
 
-    if dry_run:
-        return conf
+        if dry_run:
+            print(conf)
 
-    perform_import(conf)
-    if clean:
-        for tmp in (bulk_yml, tsv_file, out_file):
-            os.remove(tmp)
+        perform_import(conf)
+        if clean:
+            for tmp in (bulk_yml, tsv_file, out_file):
+                os.remove(tmp)
 
     return conf
 
 
-def perform_import(conf):
+def perform_import(conf, transfer="ln_s"):
 
-    # TODO use `sudo` to login as root and not store the pswds
     # see https://docs.openmicroscopy.org/omero/5.6.2/users/cli/sessions.html
 
     cmd = [
@@ -71,75 +84,34 @@ def perform_import(conf):
         conf["server"],
         "-p",
         conf["port"],
-        "--transfer",
-        "ln_s",
         "--sudo",
         "root",
         "-u",
+        "-w",
+        conf["admin_passwd"],
         conf["username"],
-        "-g",
-        conf["group"],
-        # "--exclude",
-        # "clientpath",
+        "--exclude",
+        "clientpath",
         "--file",
         Path(conf["out_file"]).absolute().as_posix(),
         "--errs",
         Path("err.txt").absolute().as_posix(),
         "--bulk",
         conf["bulk_yml"],
-
     ]
+    if conf["group"]:
+        cmd.extend(["-g", conf["group"]])
+
+    if transfer:
+        cmd.extend(["--transfer", transfer])
+
     cli = CLI()
     cli.loadplugins()
-    log.info(f"Invoking omero {' '.join(cmd)}")
+    pwd_idx = cmd.index(conf["admin_passwd"])
+    cmd_str = cmd.copy()
+    cmd_str[pwd_idx] = "XXX"
+    log.info("Invoking omero %s", " ".join(cmd_str))
     cli.invoke(cmd)
-
-
-def get_configuration(pth):
-    """walks up from the directory 'pth' until a file named omero_userconf.yml is found.
-
-    Returns a dictionnary from the parsed file.
-
-    Parameters
-    ----------
-    pth: string or Path
-         the path from which to search the configuration file
-
-    Returns
-    -------
-    conf: dict
-
-    For example:
-
-    .. code::
-        {'base_dir': 'User data root directory',
-         'group': 'Prof Prakash',
-         'password': 'XXXXX',
-         'port': '4064',
-         'project': 'Default Project',
-         'server': 'omero.server.example.com',
-         'username': 'E.Erhenfest'}
-
-
-    Raises
-    ------
-    FileNotFoundError if there is no omero_userconf.yml in the file system
-
-    """
-    pth = Path(pth)
-    conf = pth / "omero_userconf.yml"
-    if conf.is_file():
-        print(f"using {conf.absolute().as_posix()}")
-        with open(conf, "r") as f:
-            return yaml.safe_load(f)
-
-    for parent in pth.parents:
-        conf = parent / "omero_userconf.yml"
-        if conf.is_file():
-            print(f"using {conf.absolute().as_posix()} configuration file")
-            with open(conf, "r") as f:
-                return yaml.safe_load(f)
-    raise FileNotFoundError("User configuration file not found")
 
 
 def create_bulk_yml(bulk_yml="bulk.yml", **kwargs):
@@ -171,57 +143,11 @@ def create_bulk_yml(bulk_yml="bulk.yml", **kwargs):
         "path": "files.tsv",
         "columns": ["target", "name", "path"],
         "continue": True,
-        # "exclude": "clientpath",
+        "exclude": "clientpath",
         "checksum_algorithm": "CRC-32",
     }
     bulk_opts.update(kwargs)
 
-    log.info(f"bulk options: {bulk_opts}")
+    log.info("bulk options: %s", bulk_opts)
     with open(bulk_yml, "w") as yml_file:
         yaml.dump(bulk_opts, yml_file)
-
-
-def create_bulk_tsv(candidates, base_dir, conf):
-
-    lines = []
-    last_project = ""
-
-    # group candidates by directory
-    paths = sorted(candidates, key=lambda p: Path(p).parent.as_posix())
-    for fullpath in paths:
-        parts = Path(fullpath).relative_to(base_dir).parts
-        if len(parts) == 1:
-            project = conf.get("project", "no_project")
-            dataset = date.today().isoformat()
-            name = parts[0].replace(" ", "_")
-
-        elif len(parts) == 2:
-            project = parts[0].replace(" ", "_")
-            dataset = date.today().isoformat()
-            name = parts[1].replace(" ", "_")
-
-        elif len(parts) == 3:
-            project = parts[0].replace(" ", "_")
-            dataset = parts[1].replace(" ", "_")
-            name = parts[2].replace(" ", "_")
-
-        else:
-            project = parts[0].replace(" ", "_")
-            dataset = parts[1].replace(" ", "_")
-            name = "-".join(parts[2:]).replace(" ", "_")
-
-        if project == last_project:
-            ## use the latest existing dataset
-            target = f"Project:name:{project}/Dataset:+name:{dataset}"
-        else:
-            ## create a new dataset
-            target = f"Project:name:{project}/Dataset:@name:{dataset}"
-            last_project = project
-
-        lines.append("\t".join((target, name, fullpath + "\n")))
-
-    log.info(f"Preparing to import {len(lines)} files")
-    out_file = conf.get("tsv_file", "files.tsv")
-
-    with open(out_file, "w") as f:
-        f.writelines(lines)
