@@ -5,16 +5,16 @@
 import os
 import logging
 import tempfile
-import env
 
 from pathlib import Path
 
+import csv
 import yaml
 import omero
 
 from omero.util import import_candidates
 from omero.cli import CLI
-from collector import create_import_table, get_configuration
+from .collector import create_import_table, get_configuration
 
 
 log = logging.getLogger(__name__)
@@ -23,7 +23,9 @@ log.setLevel("INFO")
 log.addHandler(logfile)
 
 
-def auto_import(base_dir, dry_run=False, import_table=None, reset=True, clean=False):
+def auto_import(
+    base_dir, dry_run=False, import_table=None, reset=True, clean=False, **kwargs
+):
     """Automatically import image data from the directories bellow base_dir
 
     The process starts by walking those directories to find annotation files.
@@ -37,7 +39,7 @@ def auto_import(base_dir, dry_run=False, import_table=None, reset=True, clean=Fa
     base_dir = Path(base_dir)
     conf = get_configuration()
     conf["base_dir"] = base_dir
-    if not import_table or reset:
+    if (import_table is None) or reset:
         import_table = create_import_table(base_dir)
 
     if not "group" in import_table:
@@ -61,16 +63,18 @@ def auto_import(base_dir, dry_run=False, import_table=None, reset=True, clean=Fa
         conf["out_file"] = out_file
 
         create_bulk_yml(bulk_yml=bulk_yml, dry_run=dry_run, path=tsv_file)
-        sub_table[["target", "fileset", "file_path"]].to_csv(tsv_file, sep="\t")
+        sub_table[["target", "fileset", "file_path"]].to_csv(
+            tsv_file, sep="\t", index=False, header=False, quoting=csv.QUOTE_NONE
+        )
 
         if dry_run:
             print(conf)
 
-        perform_import(conf)
+        perform_import(conf, **kwargs)
         if clean:
             for tmp in (bulk_yml, tsv_file, out_file):
                 os.remove(tmp)
-
+    conf["amin_passwd"] = "XXX"
     return conf
 
 
@@ -86,9 +90,9 @@ def perform_import(conf, transfer="ln_s"):
         conf["port"],
         "--sudo",
         "root",
-        "-u",
         "-w",
         conf["admin_passwd"],
+        "-u",
         conf["username"],
         "--exclude",
         "clientpath",

@@ -1,9 +1,10 @@
+import os
 import logging
 from pathlib import Path
 from datetime import date
 
-import pandas as pd
 import toml
+import pandas as pd
 from omero.util import import_candidates
 
 log = logging.getLogger(__name__)
@@ -16,6 +17,7 @@ def get_configuration():
 
     """
     conf = {}
+    env = os.environ
     conf["server"] = env.get("OMERO_SERVER", "localhost")
     conf["port"] = env.get("OMERO_PORT", "4064")
     conf["admin_passwd"] = env.get("OMERO_ROOT_PASSWORD")
@@ -64,8 +66,8 @@ def collect_candidates(base_dir, annotation_tomls=None):
     candidate_paths = sorted(candidates, key=lambda p: Path(p).parent.as_posix())
     annotated_paths = list(annotation_tomls)
 
-    # sort annotated by depth
-    annotated_paths.sort(key=lambda p: len(p.parts), reverse=False)
+    # sort annotated by depth, deeper first
+    annotated_paths.sort(key=lambda p: len(p.parts), reverse=True)
     to_annotate = {}
     for annotated in annotated_paths:
         for candidate in candidate_paths:
@@ -105,9 +107,7 @@ def parse_pair(candidate_path, annotation_path, base_dir):
     # https://docs.openmicroscopy.org/omero/5.6.2/users/cli/import-target.html#importing-to-a-dataset-or-screen
     target = f'Project:name:"{project}"/Dataset:+name:"{dataset}"'
     file_path = Path(candidate_path).absolute().as_posix()
-    tsv_line = "\t".join((target, fileset, file_path + "\n"))
-
-    return annotation.update(
+    annotation.update(
         {
             "target": target,
             "dataset": dataset,
@@ -115,16 +115,20 @@ def parse_pair(candidate_path, annotation_path, base_dir):
             "file_path": file_path,
         }
     )
+    return annotation
 
 
-def create_import_table(base_dir, out_file=None):
+def create_import_table(base_dir, out_file=None, to_annotate=None):
 
     base_dir = Path(base_dir)
-    to_annotate = collect_candidates(base_dir)
+    if to_annotate is None:
+        to_annotate = collect_candidates(base_dir)
 
     table = pd.DataFrame.from_records(
-        parse_pair(candidate_path, annotation_path, base_dir)
-        for candidate_path, annotation_path in to_annotate.items()
+        (
+            parse_pair(candidate_path, annotation_path, base_dir)
+            for candidate_path, annotation_path in to_annotate.items()
+        )
     )
     if out_file is not None:
         table.to_csv(out_file, sep="\t")
