@@ -74,7 +74,7 @@ def auto_import(
         if clean:
             for tmp in (bulk_yml, tsv_file, out_file):
                 os.remove(tmp)
-    conf["amin_passwd"] = "XXX"
+    conf["admin_passwd"] = "XXX"
     return conf
 
 
