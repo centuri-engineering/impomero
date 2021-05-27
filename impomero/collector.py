@@ -92,7 +92,7 @@ def collect_candidates(base_dir, annotation_tomls=None):
 
 def parse_pair(candidate_path, annotation_path, base_dir):
 
-    with open(annotation_path, "r") as fh:
+    with open(annotation_path, "r", encoding="utf-8") as fh:
         annotation = toml.load(fh)
     project = annotation["project"]
 
