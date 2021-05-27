@@ -5,6 +5,7 @@
 
 
 import argparse
+from omero.gateway import BlitzGateway
 
 from impomero.importer_job import auto_import
 from impomero.annotation_job import auto_annotate
@@ -58,6 +59,14 @@ conf, import_table = auto_import(
     transfer=transfer,
 )
 
+conn = BlitzGateway(
+    host=conf["host"],
+    port=conf["port"],
+    username="root",
+    passwd=conf["admin_passwd"],
+    secure=True,
+)
+
 if args.annotate:
     print("Annotating ... ")
-    auto_annotate(conf, import_table)
+    auto_annotate(conn, import_table)
