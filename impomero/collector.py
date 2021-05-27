@@ -35,7 +35,7 @@ def _has_annotation(directory):
 
 
 def _is_annotation(toml_file):
-    with open(toml_file, "r") as fh:
+    with open(toml_file, "r", encoding="utf-8") as fh:
         if not "# omero annotation file" in fh.readline():
             return False
         ann = toml.load(fh)
