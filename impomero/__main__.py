@@ -30,17 +30,34 @@ parser.add_argument(
 parser.add_argument(
     "-a",
     "--annotate",
-    help="automate annotations from yml files",
+    help="automatic annotations from the toml file",
     action="store_true",
 )
+
+parser.add_argument(
+    "-l",
+    "--link",
+    help="Use symbolic links to raw data",
+    action="store_true",
+)
+
 
 args = parser.parse_args()
 
 reset = not args.use_cache
 
+
+transfer = "ln_s" if args.link else None
+
 print("importing ... ")
-conf = auto_import(args.path, args.dry_run, reset, clean=not args.annotate)
+conf, import_table = auto_import(
+    base_dir=args.path,
+    dry_run=args.dry_run,
+    reset=reset,
+    clean=not args.annotate,
+    transfer=transfer,
+)
 
 if args.annotate:
     print("Annotating ... ")
-    auto_annotate(conf)
+    auto_annotate(conf, import_table)

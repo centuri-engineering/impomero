@@ -31,9 +31,6 @@ def auto_import(
     The process starts by walking those directories to find annotation files.
     An annotation file must contain a `username` and a `project` entry.
 
-
-
-
     """
 
     base_dir = Path(base_dir)
@@ -75,7 +72,7 @@ def auto_import(
             for tmp in (bulk_yml, tsv_file, out_file):
                 os.remove(tmp)
     conf["admin_passwd"] = "XXX"
-    return conf
+    return conf, import_table
 
 
 def perform_import(conf, transfer="ln_s"):
