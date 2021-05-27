@@ -6,8 +6,8 @@
 
 import argparse
 
-from auto_import.importer_job import auto_import
-from auto_import.annotation_job import auto_annotate
+from impomero.importer_job import auto_import
+from impomero.annotation_job import auto_annotate
 
 
 parser = argparse.ArgumentParser()
