@@ -64,16 +64,17 @@ conf, import_table = auto_import(
     transfer=transfer,
 )
 
-conn = BlitzGateway(
-    host=conf["server"],
-    port=conf["port"],
-    username="root",
-    passwd=conf["admin_passwd"],
-    secure=True,
-)
 
 if args.annotate:
     print("~~~~~~~~~####~~~~~~~~~")
     print("Annotating ... ")
     print("~~~~~~~~~####~~~~~~~~~")
-    auto_annotate(conn, import_table)
+    with BlitzGateway(
+        host=conf["server"],
+        port=conf["port"],
+        username="root",
+        passwd=conf["admin_passwd"],
+        secure=True,
+    ) as conn:
+
+        auto_annotate(conn, import_table)
