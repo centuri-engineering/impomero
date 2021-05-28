@@ -18,7 +18,7 @@ from .collector import create_import_table, get_configuration
 
 
 log = logging.getLogger(__name__)
-logfile = logging.FileHandler("auto_importer.log")
+logfile = logging.FileHandler("auto_importer.log", encoding="utf-8")
 log.setLevel("INFO")
 log.addHandler(logfile)
 
