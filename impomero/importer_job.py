@@ -65,7 +65,7 @@ def auto_import(
         )
 
         if dry_run:
-            print({k, v for k, v in conf if k != 'admin_passwd'})
+            print({k: v for k, v in conf.items() if k != "admin_passwd"})
 
         perform_import(conf, **kwargs)
         if clean:
