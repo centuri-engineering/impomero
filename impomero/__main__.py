@@ -50,7 +50,12 @@ reset = not args.use_cache
 
 transfer = "ln_s" if args.link else None
 
+print("~~~~~~~~~####~~~~~~~~~")
+
 print("importing ... ")
+
+print("~~~~~~~~~####~~~~~~~~~")
+
 conf, import_table = auto_import(
     base_dir=args.path,
     dry_run=args.dry_run,
@@ -60,7 +65,7 @@ conf, import_table = auto_import(
 )
 
 conn = BlitzGateway(
-    host=conf["host"],
+    host=conf["server"],
     port=conf["port"],
     username="root",
     passwd=conf["admin_passwd"],
@@ -68,5 +73,7 @@ conn = BlitzGateway(
 )
 
 if args.annotate:
+    print("~~~~~~~~~####~~~~~~~~~")
     print("Annotating ... ")
+    print("~~~~~~~~~####~~~~~~~~~")
     auto_annotate(conn, import_table)
