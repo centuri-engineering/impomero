@@ -65,13 +65,12 @@ def auto_import(
         )
 
         if dry_run:
-            print(conf)
+            print({k, v for k, v in conf if k != 'admin_passwd'})
 
         perform_import(conf, **kwargs)
         if clean:
             for tmp in (bulk_yml, tsv_file, out_file):
                 os.remove(tmp)
-    conf["admin_passwd"] = "XXX"
     return conf, import_table
 
 
