@@ -2,4 +2,4 @@
 
 ## This is _very_ tailored for my import scenario
 
-## NO guaranetees
+## This is _not_ guaranted to work in any way
