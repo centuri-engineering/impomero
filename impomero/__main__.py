@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """Auto import script from a user directory
 """
 
