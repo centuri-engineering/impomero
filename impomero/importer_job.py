@@ -12,7 +12,6 @@ import csv
 import yaml
 import omero
 
-from omero.util import import_candidates
 from omero.cli import CLI
 from .collector import create_import_table, get_configuration
 

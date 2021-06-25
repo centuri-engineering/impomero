@@ -1,0 +1,11 @@
+# omero annotation file
+# misses project
+title = "Title 3"
+created = 2021-04-26T07:58:50.254758
+comment = "#test comment"
+tags = [ "test"]
+accessed = "2021-04-26 10:23:09.698404"
+
+[kv_pairs]
+organism = "Python breitensteini"
+sample = "epidermis"

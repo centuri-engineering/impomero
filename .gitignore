@@ -8,3 +8,4 @@ private
 __pycache__
 *secrets*
 *.egg-info
+build/
