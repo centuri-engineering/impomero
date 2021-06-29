@@ -1,10 +1,10 @@
-import os
 import logging
+import os
 from pathlib import Path
-from datetime import date
+from typing import List
 
-import toml
 import pandas as pd
+import toml
 from omero.util import import_candidates
 
 log = logging.getLogger(__name__)
@@ -34,13 +34,13 @@ def is_annotation(toml_file):
     'project' and 'user' keys.
     """
     with open(toml_file, "r", encoding="utf-8") as fh:
-        if not "# omero annotation file" in fh.readline():
+        if "# omero annotation file" not in fh.readline():
             return False
         ann = toml.load(fh)
         return {"project", "user"}.issubset(ann)
 
 
-def collect_annotations(base_dir: [Path, list]):
+def collect_annotations(base_dir: List[Path, list]):
     """Finds annotation files throughout the base_dir directory
 
     Parameters
@@ -68,8 +68,9 @@ def collect_annotations(base_dir: [Path, list]):
     return annotation_tomls
 
 
-def collect_candidates(base_dir: [str, Path], annotation_tomls: list = None):
-    """Finds import candidates from base_dir. Only directories with annotation files are imported
+def collect_candidates(base_dir: List[str, Path], annotation_tomls: list = None):
+    """Finds import candidates from base_dir. Only directories with annotation files
+    are imported
 
     Parameters
     ----------
@@ -220,15 +221,15 @@ def create_import_table(
     base_dir = Path(base_dir).resolve()
     if to_annotate is None:
         to_annotate = collect_candidates(base_dir)
-    table = []
+    table_ = []
     first = True
     for candidate_path, annotation_path in to_annotate.items():
         new = first and not update_dataset
         entry = parse_pair(candidate_path, annotation_path, base_dir, new_dataset=new)
-        table.append(entry)
+        table_.append(entry)
         first = False
 
-    table = pd.DataFrame.from_records(table)
+    table = pd.DataFrame.from_records(table_)
     if out_file is not None:
         table.to_csv(out_file, sep="\t")
 

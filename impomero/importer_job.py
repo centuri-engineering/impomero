@@ -2,19 +2,16 @@
 
 """Auto import script from a user directory
 """
-import os
+import csv
 import logging
+import os
 import tempfile
-
 from pathlib import Path
 
-import csv
 import yaml
-import omero
-
 from omero.cli import CLI
-from .collector import create_import_table, get_configuration
 
+from .collector import create_import_table, get_configuration
 
 log = logging.getLogger(__name__)
 logfile = logging.FileHandler("auto_importer.log", encoding="utf-8")
@@ -38,7 +35,7 @@ def auto_import(
     if (import_table is None) or reset:
         import_table = create_import_table(base_dir)
 
-    if not "group" in import_table:
+    if "group" not in import_table:
         import_table["group"] = ""
 
     for (user, group), sub_table in import_table.groupby(["user", "group"]):

@@ -12,25 +12,15 @@ Example annotation file
 # TODO finish module level doc
 
 
-import os
 import logging
-import tempfile
-from datetime import date
-
-from pathlib import Path
 from functools import wraps
 
-import toml
 import omero
 from omero.gateway import (
-    BlitzGateway,
-    TagAnnotationWrapper,
-    MapAnnotationWrapper,
     CommentAnnotationWrapper,
+    MapAnnotationWrapper,
+    TagAnnotationWrapper,
 )
-
-from .collector import create_import_table, get_configuration
-
 
 log = logging.getLogger(__name__)
 logfile = logging.FileHandler("auto_importer.log", encoding="utf-8")
@@ -67,7 +57,7 @@ def auto_annotate(conn, import_table, dry_run=False):
 
 
 @auto_reconnect
-def annotate(conn, object_id, ann, object_type="Dataset"):
+def annotate(conn, object_id, ann, object_type="Image"):
     """Applies the annotations in `annotation_toml` to the dataset
 
     Parameters

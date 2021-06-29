@@ -1,8 +1,9 @@
+import logging
 import sys
 import time
-import logging
-from watchdog.observers.polling import PollingObserver as Observer
+
 from watchdog.events import LoggingEventHandler, PatternMatchingEventHandler
+from watchdog.observers.polling import PollingObserver as Observer
 
 # had to do:
 # sudo sysctl fs.inotify.max_user_watches=100000

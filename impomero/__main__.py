@@ -4,11 +4,11 @@
 
 
 import argparse
+
 from omero.gateway import BlitzGateway
 
-from impomero.importer_job import auto_import
 from impomero.annotation_job import auto_annotate
-
+from impomero.importer_job import auto_import
 
 parser = argparse.ArgumentParser()
 parser.add_argument("path", help="path to the directory you want to import into omero")

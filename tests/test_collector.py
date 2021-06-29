@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
-from impomero import collector
 
+from impomero import collector
 
 DATA_PATH = Path(__file__).parent / "../test_data/"
 
