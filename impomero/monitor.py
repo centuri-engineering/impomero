@@ -1,44 +1,112 @@
-import logging
-import sys
-import time
+"""Filesystem monitoring
+"""
 
-from watchdog.events import LoggingEventHandler, PatternMatchingEventHandler
+import logging
+import sqlite3
+import time
+from pathlib import Path
+
+from omero.gateway import BlitzGateway
+from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers.polling import PollingObserver as Observer
+
+from .annotation_job import auto_annotate, update_annotation
+from .collector import get_configuration, is_annotation
+from .importer_job import auto_import
+
+log = logging.getLogger(__name__)
+
 
 # had to do:
 # sudo sysctl fs.inotify.max_user_watches=100000
 
 
 class TomlCreatedEventHandler(PatternMatchingEventHandler):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, transfer=None, dry_run=False, import_db=None):
+        self.transfer = transfer
+        self.dry_run = dry_run
+        self.import_db = import_db
         super().__init__(patterns=["*.toml"])
 
     def on_created(self, event):
-        print(f"Toml file {event.src_path} created")
-        with open(event.src_path, "r") as fh:
-            print(fh.readline())
+        log.info(f"Toml file {event.src_path} created")
+        if not is_annotation(event.src_path):
+            log.info(f"{event.src_path} was not an annotation file")
+            return
+
+        base_dir = Path(event.src_path).parent
+
+        log.info("~~~~~~~~~####~~~~~~~~~")
+        log.info(f"importing from {base_dir}")
+        log.info("~~~~~~~~~####~~~~~~~~~")
+
+        with sqlite3.connect(self.import_db) as sql_con:
+            ids = [
+                val[0]
+                for val in sql_con.execute(
+                    f"select id from annotated where base_dir='{base_dir}'"
+                )
+            ]
+        if ids:
+            self.update_imported(ids, event.src_path)
+        else:
+            self.fresh_import(base_dir)
 
     def on_modified(self, event):
-        print(f"Toml file {event.src_path} modified")
-        with open(event.src_path, "r") as fh:
-            print(fh.readline())
+        return self.on_created(event)
+
+    def fresh_import(self, base_dir):
+
+        conf, import_table = auto_import(
+            base_dir=base_dir,
+            dry_run=self.dry_run,
+            # We do not want to clean temp files
+            # as we want to data annotate after
+            clean=False,
+            transfer=self.transfer,
+        )
+
+        log.info("~~~~~~~~~####~~~~~~~~~")
+        log.info("Annotating ... ")
+        log.info("~~~~~~~~~####~~~~~~~~~")
+        with BlitzGateway(
+            host=conf["server"],
+            port=conf["port"],
+            username="root",
+            passwd=conf["admin_passwd"],
+            secure=True,
+        ) as conn:
+            annotated = auto_annotate(conn, import_table)
+
+        annotated["base_dir"] = base_dir.resolve().as_posix()
+        with sqlite3.connect(self.import_db) as sql_con:
+            import_table.to_sql("import_table", con=sql_con, if_exists="append")
+            annotated.to_sql("annotated", con=sql_con, if_exists="append")
+
+        # TODO: spawn a new Observer for that base_dir
+
+    def update_imported(self, ids, toml_path):
+
+        conf = get_configuration()
+        with BlitzGateway(
+            host=conf["server"],
+            port=conf["port"],
+            username="root",
+            passwd=conf["admin_passwd"],
+            secure=True,
+        ) as conn:
+            for img_id in ids:
+                update_annotation(conn, img_id, toml_path, object_type="Image")
 
 
-if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
+def start_toml_observer(path, transfer=None, dry_run=False, import_db=None):
+    toml_handler = TomlCreatedEventHandler(
+        transfer=transfer, dry_run=dry_run, import_db=import_db
     )
-    path = sys.argv[1] if len(sys.argv) > 1 else "."
-    event_handler = LoggingEventHandler()
-
-    toml_handler = TomlCreatedEventHandler()
 
     # We use the polling observer as inotify
     # does not see remote file creation events
     observer = Observer(polling_interval=60)
-    observer.schedule(event_handler, path, recursive=True)
     observer.schedule(toml_handler, path, recursive=True)
     print("Starting observer")
     observer.start()

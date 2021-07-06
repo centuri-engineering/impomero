@@ -193,8 +193,8 @@ def parse_pair(
 
 
 def create_import_table(
-    base_dir: [Path, str],
-    out_file: [Path, str] = None,
+    base_dir: List[Path, str],
+    out_file: List[Path, str] = None,
     to_annotate: dict = None,
     update_dataset: bool = False,
 ):

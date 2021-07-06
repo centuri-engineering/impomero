@@ -1,14 +1,10 @@
 #!/usr/bin/env python
 """Auto import script from a user directory
 """
-
-
 import argparse
+import os
 
-from omero.gateway import BlitzGateway
-
-from impomero.annotation_job import auto_annotate
-from impomero.importer_job import auto_import
+from .monitor import start_toml_observer
 
 parser = argparse.ArgumentParser()
 parser.add_argument("path", help="path to the directory you want to import into omero")
@@ -16,21 +12,6 @@ parser.add_argument(
     "-d",
     "--dry_run",
     help="do not perform the import, just output the preparation files",
-    action="store_true",
-)
-
-parser.add_argument(
-    "-c",
-    "--use_cache",
-    help="Do not parse the directory again, perform import "
-    "from previously generated files",
-    action="store_true",
-)
-
-parser.add_argument(
-    "-a",
-    "--annotate",
-    help="automatic annotations from the toml file",
     action="store_true",
 )
 
@@ -43,37 +24,10 @@ parser.add_argument(
 
 
 args = parser.parse_args()
-
-reset = not args.use_cache
-
-
 transfer = "ln_s" if args.link else None
 
-print("~~~~~~~~~####~~~~~~~~~")
+db = os.environ.get("IMPOMERO_DB")
+if db is None:
+    db = os.path.join(os.environ.get("HOME", "impomero.sql"))
 
-print("importing ... ")
-
-print("~~~~~~~~~####~~~~~~~~~")
-
-conf, import_table = auto_import(
-    base_dir=args.path,
-    dry_run=args.dry_run,
-    reset=reset,
-    clean=not args.annotate,
-    transfer=transfer,
-)
-
-
-if args.annotate:
-    print("~~~~~~~~~####~~~~~~~~~")
-    print("Annotating ... ")
-    print("~~~~~~~~~####~~~~~~~~~")
-    with BlitzGateway(
-        host=conf["server"],
-        port=conf["port"],
-        username="root",
-        passwd=conf["admin_passwd"],
-        secure=True,
-    ) as conn:
-
-        auto_annotate(conn, import_table)
+start_toml_observer(args.path, transfer=transfer, dry_run=args.dry_run, import_db=db)
