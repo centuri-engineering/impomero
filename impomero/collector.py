@@ -1,7 +1,7 @@
 import logging
 import os
 from pathlib import Path
-from typing import List
+from typing import Union
 
 import pandas as pd
 import toml
@@ -40,7 +40,7 @@ def is_annotation(toml_file):
         return {"project", "user"}.issubset(ann)
 
 
-def collect_annotations(base_dir: List[Path, list]):
+def collect_annotations(base_dir: Union[Path, str]):
     """Finds annotation files throughout the base_dir directory
 
     Parameters
@@ -68,7 +68,7 @@ def collect_annotations(base_dir: List[Path, list]):
     return annotation_tomls
 
 
-def collect_candidates(base_dir: List[str, Path], annotation_tomls: list = None):
+def collect_candidates(base_dir: Union[str, Path], annotation_tomls: list = None):
     """Finds import candidates from base_dir. Only directories with annotation files
     are imported
 
@@ -193,8 +193,8 @@ def parse_pair(
 
 
 def create_import_table(
-    base_dir: List[Path, str],
-    out_file: List[Path, str] = None,
+    base_dir: Union[Path, str],
+    out_file: Union[Path, str] = None,
     to_annotate: dict = None,
     update_dataset: bool = False,
 ):
