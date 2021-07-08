@@ -106,7 +106,7 @@ def start_toml_observer(path, transfer=None, dry_run=False, import_db=None):
 
     # We use the polling observer as inotify
     # does not see remote file creation events
-    observer = Observer(polling_interval=60)
+    observer = Observer()
     observer.schedule(toml_handler, path, recursive=True)
     print("Starting observer")
     observer.start()
