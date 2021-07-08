@@ -4,3 +4,4 @@ omero-py
 toml
 zeroc-ice
 pandas
+watchdog
