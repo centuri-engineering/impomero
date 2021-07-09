@@ -112,15 +112,16 @@ def annotate(conn, object_id, ann, object_type="Image"):
         annotated.linkAnnotation(com_ann)
 
 
-@auto_reconnect
 def _find_dataset_id(conn, dataset, project):
     """Query the omero db to find the dataset id based on its name"""
-    dsets = conn.getObjects("Dataset", attributes={"name": f'"{dataset}"'})
+    dsets = conn.getObjects("Dataset", attributes={"name": dataset})
+
     for dset in dsets:
         projs = [p for p in dset.getAncestry() if p.name == f'"{project}"']
         if projs:
             log.info(f"Found dataset {dataset} of project {project}")
             return {"dataset": dset.getId(), "project": projs[0].getId()}
+        raise ValueError(f"No {dataset} associated with project {project}")
     raise ValueError(f"No dataset {dataset} was found in the base")
 
 
