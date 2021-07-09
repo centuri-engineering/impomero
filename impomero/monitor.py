@@ -41,12 +41,15 @@ class TomlCreatedEventHandler(PatternMatchingEventHandler):
         log.info("~~~~~~~~~####~~~~~~~~~")
 
         with sqlite3.connect(self.import_db) as sql_con:
-            ids = [
-                val[0]
-                for val in sql_con.execute(
-                    f"select id from annotated where base_dir='{base_dir}'"
-                )
-            ]
+            try:
+                ids = [
+                    val[0]
+                    for val in sql_con.execute(
+                        f"select id from annotated where base_dir='{base_dir}'"
+                    )
+                ]
+            except sqlite3.OperationalError:
+                ids = []
         if ids:
             self.update_imported(ids, event.src_path)
         else:
