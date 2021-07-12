@@ -77,7 +77,7 @@ def auto_annotate(conn, import_table, dry_run=False):
     return pd.DataFrame.from_records(rec)
 
 
-@auto_reconnect
+# @auto_reconnect (see GH #295)
 def annotate(conn, object_id, ann, object_type="Image"):
     """Applies the annotations in `ann` to the object
 
