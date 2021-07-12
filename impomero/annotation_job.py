@@ -74,7 +74,7 @@ def auto_annotate(conn, import_table, dry_run=False):
             rec = dict(row)
             rec["id"] = img_id
             annotated.append(rec)
-    return pd.DataFrame.from_records(rec)
+    return pd.DataFrame.from_records(annotated)
 
 
 # @auto_reconnect (see GH #295)
