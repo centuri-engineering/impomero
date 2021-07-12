@@ -74,6 +74,7 @@ def auto_annotate(conn, import_table, dry_run=False):
 
             rec = dict(row)
             # Flatten the kv pairs for later sql dump
+            rec["accessed"] = str(rec["accessed"])
             for key, val in row["kv_pairs"].items():
                 rec[key] = val
             rec.pop("kv_pairs")
