@@ -71,7 +71,6 @@ def auto_annotate(conn, import_table, dry_run=False):
                 print(f"would annotate image {img_id} with card {row['title']}")
                 continue
             annotate(user_conn, img_id, row, object_type="Image")
-
             rec = _flatten(row)
             rec["id"] = img_id
             annotated.append(rec)

@@ -82,14 +82,8 @@ class TomlCreatedEventHandler(PatternMatchingEventHandler):
             annotated = auto_annotate(conn, import_table)
 
         annotated["base_dir"] = base_dir.resolve().as_posix()
-
         with sqlite3.connect(self.import_db) as sql_con:
-            try:
-                annotated.to_sql("annotated", con=sql_con, if_exists="append")
-            except sqlite3.InterfaceError as e:
-                print(e)
-                for col in annotated.head().columns:
-                    print(col, annotated[col])
+            annotated.to_sql("annotated", con=sql_con, if_exists="append")
 
         # TODO: spawn a new Observer for that base_dir
 
