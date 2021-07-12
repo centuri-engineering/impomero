@@ -56,7 +56,14 @@ def auto_annotate(conn, import_table, dry_run=False):
     for dset_name, row in dset_table.iterrows():
         user = row["user"]
         user_conn = conn.suConn(user)
-        dset_id = _find_dataset_id(user_conn, dset_name, row["project"])["dataset"]
+        try:
+            dset_id = _find_dataset_id(user_conn, dset_name, row["project"])["dataset"]
+        except ValueError:
+            # Try with quotes
+            dset_id = _find_dataset_id(user_conn, f'"{dset_name}"', row["project"])[
+                "dataset"
+            ]
+
         dataset = user_conn.getObject("Dataset", dset_id)
         for image in dataset.listChildren():
             img_id = image.getId()
@@ -117,7 +124,7 @@ def _find_dataset_id(conn, dataset, project):
     dsets = conn.getObjects("Dataset", attributes={"name": dataset})
 
     for dset in dsets:
-        projs = [p for p in dset.getAncestry() if p.name == f'"{project}"']
+        projs = [p for p in dset.getAncestry() if p.name in (f'"{project}"', project)]
         if projs:
             log.info(f"Found dataset {dataset} of project {project}")
             return {"dataset": dset.getId(), "project": projs[0].getId()}
