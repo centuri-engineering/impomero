@@ -82,7 +82,7 @@ class TomlCreatedEventHandler(PatternMatchingEventHandler):
             annotated = auto_annotate(conn, import_table)
 
         annotated["base_dir"] = base_dir.resolve().as_posix()
-        annotated["accessed"] = annotated["accessed"].apply(str)
+
         with sqlite3.connect(self.import_db) as sql_con:
             try:
                 annotated.to_sql("annotated", con=sql_con, if_exists="append")

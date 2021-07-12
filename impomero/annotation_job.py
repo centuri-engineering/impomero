@@ -71,9 +71,15 @@ def auto_annotate(conn, import_table, dry_run=False):
                 print(f"would annotate image {img_id} with card {row['title']}")
                 continue
             annotate(user_conn, img_id, row, object_type="Image")
+
             rec = dict(row)
+            # Flatten the kv pairs for later sql dump
+            for key, val in row["kv_pairs"].items():
+                rec[key] = val
+            rec.pop("kv_pairs")
             rec["id"] = img_id
             annotated.append(rec)
+
     return pd.DataFrame.from_records(annotated)
 
 
