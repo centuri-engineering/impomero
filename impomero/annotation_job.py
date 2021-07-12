@@ -72,16 +72,23 @@ def auto_annotate(conn, import_table, dry_run=False):
                 continue
             annotate(user_conn, img_id, row, object_type="Image")
 
-            rec = dict(row)
-            # Flatten the kv pairs for later sql dump
-            rec["accessed"] = str(rec["accessed"])
-            for key, val in row["kv_pairs"].items():
-                rec[key] = val
-            rec.pop("kv_pairs")
+            rec = _flatten(row)
             rec["id"] = img_id
             annotated.append(rec)
 
     return pd.DataFrame.from_records(annotated)
+
+
+def _flatten(row):
+    """use sql serilizable data types"""
+
+    rec = dict(row)
+    rec["accessed"] = str(rec["accessed"])
+    for key, val in row["kv_pairs"].items():
+        rec[key] = val
+    rec.pop("kv_pairs")
+    rec["tags"] = ",".join(rec["tags"])
+    return rec
 
 
 # @auto_reconnect (see GH #295)
