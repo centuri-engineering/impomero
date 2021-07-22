@@ -76,7 +76,7 @@ def collect_candidates(base_dir: Union[str, Path], annotation_tomls: list = None
     ----------
     base_dir : str or :class:`Path`
         the path to recursively parse to find import candidates
-    annotation_tomls: pd.DataFrame (optional)
+    annotation_tomls: list (optional)
         if given, do not search for toml files before importing
 
     Returns
@@ -87,7 +87,6 @@ def collect_candidates(base_dir: Union[str, Path], annotation_tomls: list = None
 
     """
     base_dir = Path(base_dir).resolve()
-
     if annotation_tomls is None:
         annotation_tomls = collect_annotations(base_dir)
 
@@ -106,7 +105,6 @@ def collect_candidates(base_dir: Union[str, Path], annotation_tomls: list = None
                     "File %s already annotated by %s", candidate, to_annotate[candidate]
                 )
                 continue
-
             if not _is_relative_to(candidate, annotated.parent):
                 # This is expected as go accross do the whole grid
                 continue

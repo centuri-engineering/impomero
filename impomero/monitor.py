@@ -12,6 +12,7 @@ from watchdog.observers.polling import PollingObserver as Observer
 
 from .annotation_job import auto_annotate, update_annotation
 from .collector import get_configuration, is_annotation
+from .db import init_db
 from .importer_job import auto_import
 
 log = logging.getLogger(__name__)
@@ -22,13 +23,42 @@ log = logging.getLogger(__name__)
 
 
 class TomlCreatedEventHandler(PatternMatchingEventHandler):
-    def __init__(self, transfer=None, dry_run=False, import_db=None):
+    """This EventHandler will monitor the creation or modification of annotation cards
+
+    When a `toml` file appears on the observed file system, it is read
+    to check if it is an omero annotation file (see
+    :func:`impomero.collector.is_annotation`).  If this is the case,
+    the data already present in its parent directory is imported and
+    anotated, and the directory is added to the observed directories
+    """
+
+    def __init__(
+        self, transfer: str = None, dry_run: bool = False, import_db: str = None
+    ):
+        """Returns a :class:`TomlCreatedEventHandler` instance
+
+        Parameters
+        ----------
+        transfer : str
+            option passed to the `omero import` command (see `[1]`_ )
+            for symbolic link import, use "ln_s"
+        dry_run : bool, default False
+            if True, will only print what it would do (up to some point)
+        import_db : str
+            path to the sqlite DB used to store information between sessions
+
+
+        .. _[1]: https://docs.openmicroscopy.org/omero/5.6.3/sysadmins/\
+        in-place-import.html#getting-started
+        """
         self.transfer = transfer
         self.dry_run = dry_run
         self.import_db = import_db
+        init_db(import_db)
         super().__init__(patterns=["*.toml"])
 
     def on_created(self, event):
+        """What happens when a toml file is created"""
         log.info(f"Toml file {event.src_path} created")
         if not is_annotation(event.src_path):
             log.info(f"{event.src_path} was not an annotation file")
@@ -41,25 +71,24 @@ class TomlCreatedEventHandler(PatternMatchingEventHandler):
         log.info("~~~~~~~~~####~~~~~~~~~")
 
         with sqlite3.connect(self.import_db) as sql_con:
-            try:
-                ids = [
-                    val[0]
-                    for val in sql_con.execute(
-                        f"select id from annotated where base_dir='{base_dir}'"
-                    )
-                ]
-            except sqlite3.OperationalError:
-                ids = []
+            ids = [
+                val[0]
+                for val in sql_con.execute(
+                    f"SELECT id FROM annotated WHERE base_dir='{base_dir}'"
+                )
+            ]
         if ids:
             self.update_imported(ids, event.src_path)
         else:
             self.fresh_import(base_dir)
+        with sqlite3.connect(self.import_db) as sql_con:
+            sql_con.execute(f"INSERT INTO monitored (base_dir) VALUES ({base_dir});")
 
     def on_modified(self, event):
         return self.on_created(event)
 
     def fresh_import(self, base_dir):
-
+        """If base_dir did not have images before, import them"""
         conf, import_table = auto_import(
             base_dir=base_dir,
             dry_run=self.dry_run,

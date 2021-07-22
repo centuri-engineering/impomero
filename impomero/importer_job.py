@@ -46,7 +46,7 @@ def auto_import(
         _, tsv_file = tempfile.mkstemp(suffix=".tsv", text=True)
         log.info(f"creating tsv_file {tsv_file}")
 
-        _, out_file = tempfile.mkstemp(suffix=".out", text=True)
+        _, out_file = tempfile.mkstemp(suffix=".out.yml", text=True)
         log.info(f"creating out_file {out_file}")
 
         conf["username"] = user
@@ -90,6 +90,8 @@ def perform_import(conf, transfer="ln_s"):
         "clientpath",
         "--file",
         Path(conf["out_file"]).absolute().as_posix(),
+        "--output",
+        "YAML",
         "--errs",
         Path("err.txt").absolute().as_posix(),
         "--bulk",
