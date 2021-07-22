@@ -91,7 +91,7 @@ def perform_import(conf, transfer="ln_s"):
         "--file",
         Path(conf["out_file"]).absolute().as_posix(),
         "--output",
-        "YAML",
+        "yaml",
         "--errs",
         Path("err.txt").absolute().as_posix(),
         "--bulk",
