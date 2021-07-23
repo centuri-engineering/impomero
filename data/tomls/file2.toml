@@ -1,8 +1,8 @@
 # omero annotation file
 title = "Title 3"
 created = 2021-04-26T07:58:50.254758
-project = "Project Test 1"
-user = "gay"
+project = "Project 2"
+user = "paul"
 comment = "#test comment"
 tags = [ "test"]
 accessed = "2021-04-26 10:23:09.698404"

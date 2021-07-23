@@ -1,13 +1,13 @@
 # omero annotation file
 title = "Title 1"
 created = 2021-04-26T07:58:50.254758
-project = "Project Test 1"
-user = "gay"
-comment = "#test comment"
-tags = [ "test"]
+project = "Project Test 2"
+user = "kathleen"
+comment = "#test comment with #new tag"
+tags = [ "test", "new"]
 accessed = "2021-04-26 10:23:09.698404"
 
 [kv_pairs]
 organism = "Python breitensteini"
-sample = "Sister Chromatid"
+method = "Laser Ablation"
 channel_0 = "Atb2-GFP"

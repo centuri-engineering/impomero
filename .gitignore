@@ -1,11 +1,11 @@
 .ipynb_checkpoints
 *.*[~]
-misc
-iterate.dat
-cell-tracker
 private
-*.blend1
 __pycache__
 *secrets*
 *.egg-info
 build/
+
+data/OMERO/*
+data/impomero.sql
+data/raw/**/*.toml
