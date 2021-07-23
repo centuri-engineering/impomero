@@ -6,7 +6,7 @@ USER root
 
 USER omero-server
 WORKDIR /opt/omero/server/
-COPY . /opt/omero/server/impomero/
+COPY --chown=omero-server . /opt/omero/server/impomero/
 
 WORKDIR impomero
 
