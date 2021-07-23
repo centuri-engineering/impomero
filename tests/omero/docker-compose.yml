@@ -10,9 +10,6 @@ services:
       POSTGRES_PASSWORD: omero
     networks:
       - omero
-    volumes:
-      - "db_omero:/var/lib/postgresql/data"
-      - "backup:/backups"
 
   omeroserver:
     image: "centuri/centuri-omero-server:latest"
@@ -28,37 +25,6 @@ services:
       - "14064:4064"
       - "14065:4065"
       - "14066:4066"
-    volumes:
-      - "omero:/OMERO"
-      - "data:/data"
-  omeroweb:
-    image: "openmicroscopy/omero-web-standalone:latest"
-    environment:
-      OMEROHOST: omeroserver
-      CONFIG_omero_web__check_version: "false"
-      CONFIG_omero_web_secure: "true"
-    networks:
-      - omero
-    ports:
-      - "14080:4080"
 
 networks:
   omero:
-
-volumes:
-  db_omero:
-  omero:
-    driver_opts:
-      type: none
-      device: data/OMERO
-      o: bind
-  backup:
-    driver_opts:
-      type: none
-      device: data/backups
-      o: bind
-  data:
-    driver_opts:
-      type: none
-      device: data/
-      o: bind
