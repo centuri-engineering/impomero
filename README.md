@@ -13,9 +13,9 @@ python -m pip install -r requirements.txt
 python -m pip install -e .
 ```
 
-In any case you need full admin priviledges on the omero server to run this tool.
+In any case you need full admin privileges on the omero server to run this tool.
 
-How to setup this project as a service is not yet impemented.
+How to setup this project as a service is not yet implemented.
 
 
 ## Workflow
@@ -24,7 +24,7 @@ How to setup this project as a service is not yet impemented.
 
 We use [watchdog](https://pythonhosted.org/watchdog/) to monitor the directory from which to import the data.
 
-Initially, we monitor only for `.toml` card (see [cataloger](https://github.com/centuri-engineering/cataloger)) When such card appears in the filesystem, all microscopy data below is imported and annotated according to this card's content.
+Initially, we monitor only for `.toml` card (see [cataloger](https://github.com/centuri-engineering/cataloger)) When such card appears in the file-system, all microscopy data below is imported and annotated according to this card's content.
 
 If a `toml` file is modified, but the data in its base directory was already imported, the annotations are updated.
 
@@ -41,7 +41,7 @@ After a directory has been imported once, a new observer should be created to mo
 ## Mapping between file structure and omero database:
 
 The user and project are defined in the toml file (see below).
-The dataset is set as the parent directory of the toml file. If there is already a dataset with the same name in the project, a new dataset is still created, and it is left to the user to lift the ambiguity in the webclient. Image names in the db are concatenated from the path to the image relative to the base directory.
+The dataset is set as the parent directory of the toml file. If there is already a dataset with the same name in the project, a new dataset is still created, and it is left to the user to lift the ambiguity in the web client. Image names in the db are concatenated from the path to the image relative to the base directory.
 
 ![Mapping between directory structure and omero](doc/annotation_tree.svg)
 

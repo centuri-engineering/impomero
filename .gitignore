@@ -5,6 +5,9 @@ __pycache__
 *secrets*
 *.egg-info
 build/
+.coverage
+
+auto_importer.log
 
 data/OMERO/*
 data/impomero.sql

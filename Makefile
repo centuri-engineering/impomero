@@ -13,3 +13,9 @@ docker_test:
 
 docker_down:
 	cd tests/omero && docker-compose down
+
+docker-clean:
+	docker volume rm test_omero_backup
+	docker volume rm test_omero_data
+	docker volume rm test_omero_db_omero
+	docker volume rm test_omero_omero

@@ -12,7 +12,7 @@ export IMPOMERO_DB=impomero.sql
 
 source venv3/bin/activate
 python -m impomero -l impomero/data/raw/ &
-PID1=$!
-cp impomero/data/tomls/file0.toml impomero/data/raw/dir0
-sleep 10
-kill $PID1
+# PID1=$!
+# cp impomero/data/tomls/file0.toml impomero/data/raw/dir0
+# sleep 10
+# kill $PID1

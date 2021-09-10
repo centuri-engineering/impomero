@@ -1,0 +1,34 @@
+[project]
+name = "impomero"
+authors = [
+        {name = "Guillaume Gay", email = "guillaume@damcb.com"}
+]
+classifiers = [
+    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    "Intended Audience :: Science/Research",
+    "Operating System :: POSIX",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Database"
+]
+requires-python = ">=3.7"
+dynamic = ['version', 'description']
+readme = "README.md"
+keywords = ['omero', 'bioimage']
+
+[project.urls]
+Source = "https://github.com/centuri-engineering/impomero"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+addopts = """\
+        --docker-compose=tests/omero/docker-compose.yml \
+        --docker-compose-remove-volumes \
+        --docker-compose-remove-volumes\
+"""
+testpaths = ["tests",]
+
+[tool.isort]
+profile = "black"

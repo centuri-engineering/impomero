@@ -1,13 +1,6 @@
-from distutils.core import setup
+"""Minimal setup.py to allow inplace install
+"""
 
-setup(
-    name="impomero",
-    version="0.1",
-    description="Python auto importer in OMERO",
-    author="Guillaume Gay",
-    author_email="guillaume@damcb.com",
-    url="https://github.com/centuri-engineering/impomero",
-    packages=[
-        "impomero",
-    ],
-)
+import setuptools
+
+setuptools.setup()
