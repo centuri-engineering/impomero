@@ -31,8 +31,9 @@ def test_annotate(populate_db):
         passwd="nhoj",
         secure=True,
     ) as conn:
-        imgs = list(conn.getObjects("Image"))
-        assert len(imgs)
-
-        im_id = imgs[0].getId()
-        annotate(conn, im_id, annotation)
+        annotate(conn, 1, annotation)
+        # img = conn.getObject("Image", 1)
+        assert list(conn.getObjects("TagAnnotation", attributes={"textValue": "test"}))
+        assert list(conn.getObjects("TagAnnotation", attributes={"textValue": "new"}))
+        for link in conn.getAnnotationLinks("Image", parent_ids=[1]):
+            print("Annotation ID:", link.getChild().id)
