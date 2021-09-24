@@ -1,3 +1,4 @@
+import os
 import shutil
 import subprocess
 import time
@@ -23,6 +24,7 @@ def wait_for_server(session_scoped_container_getter):
     service = session_scoped_container_getter.get("omeroserver").network_info[0]
     is_connected = False
     t = 0
+
     while not is_connected:
         try:
             with BlitzGateway(
@@ -41,7 +43,6 @@ def wait_for_server(session_scoped_container_getter):
         t += 1
         if t > 24:
             raise ConnectionLostException("Unable to connect")
-
     print(f"Waited {(t * 5) // 60} min {(t * 5) % 60} s for connection")
     return service.hostname, service.host_port
 
@@ -56,6 +57,8 @@ def populate_db(wait_for_server):
 @pytest.fixture(scope="function")
 def get_connection(populate_db):
     host, port = populate_db
+    os.environ["server"] = host
+    os.environ["port"] = port
     with BlitzGateway(
         host=host,
         port=int(port),
@@ -69,6 +72,9 @@ def get_connection(populate_db):
 @pytest.fixture(scope="function")
 def get_root_connection(populate_db):
     host, port = populate_db
+    os.environ["server"] = host
+    os.environ["port"] = port
+
     with BlitzGateway(
         host=host,
         port=int(port),

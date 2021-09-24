@@ -60,10 +60,12 @@ def auto_import(
             tsv_file, sep="\t", index=False, header=False, quoting=csv.QUOTE_NONE
         )
 
-        if dry_run:
+        if not dry_run:
+            perform_import(conf, **kwargs)
+        else:
+            print("dry_run")
             print({k: v for k, v in conf.items() if k != "admin_passwd"})
 
-        perform_import(conf, **kwargs)
         if clean:
             for tmp in (bulk_yml, tsv_file, out_file):
                 os.remove(tmp)
