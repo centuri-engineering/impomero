@@ -1,31 +1,11 @@
 import os
-import shutil
 from pathlib import Path
-
-import pytest
 
 from impomero import collector
 
 DATA_PATH = Path(__file__).parent.parent / "data/"
 RAW = DATA_PATH / "raw"
 TOMLS = DATA_PATH / "tomls"
-
-
-@pytest.fixture
-def move_tomls():
-    destinations = ["dir0", "dir1", "dir0/sub_dir2"]
-    for i, dst in enumerate(destinations):
-        shutil.copy(TOMLS / f"file{i}.toml", RAW / dst)
-    yield
-    for i, dst in enumerate(destinations):
-        (RAW / dst / f"file{i}.toml").unlink()
-
-
-@pytest.fixture
-def candidates(move_tomls):
-    cands = collector.collect_candidates(RAW)
-    assert len(cands) == 7
-    return cands
 
 
 def test_get_configuration():
@@ -83,8 +63,8 @@ def test_parse_pair(candidates):
     assert "Dataset:@name" in ann["target"]
 
 
-def test_create_import_table(move_tomls):
-    table = collector.create_import_table(RAW)
+def test_create_import_table(import_table):
+    table = import_table
     assert table.shape == (7, 12)
     assert "Dataset:@name" in table.loc[0, "target"]
     assert "Dataset:+name" in table.loc[1, "target"]

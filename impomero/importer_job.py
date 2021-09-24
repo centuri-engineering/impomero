@@ -55,7 +55,7 @@ def auto_import(
         conf["tsv_file"] = tsv_file
         conf["out_file"] = out_file
 
-        create_bulk_yml(bulk_yml=bulk_yml, dry_run=dry_run, path=tsv_file)
+        _create_bulk_yml(bulk_yml=bulk_yml, dry_run=dry_run, path=tsv_file)
         sub_table[["target", "fileset", "file_path"]].to_csv(
             tsv_file, sep="\t", index=False, header=False, quoting=csv.QUOTE_NONE
         )
@@ -112,7 +112,7 @@ def perform_import(conf, transfer="ln_s"):
     cli.invoke(cmd)
 
 
-def create_bulk_yml(bulk_yml="bulk.yml", **kwargs):
+def _create_bulk_yml(bulk_yml="bulk.yml", **kwargs):
     """Creates the bulk.yml file in the current directory
 
     Any keyword argument will update the default setting.

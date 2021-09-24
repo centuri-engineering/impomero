@@ -151,8 +151,11 @@ def update_annotation(conn, object_id, annotation_path, object_type="Image"):
         annotation = toml.load(fh)
 
     annotated = conn.getObject(object_type, object_id)
+    to_delete = []
     for ann in annotated.listAnnotations():
-        annotated.unlinkAnnotation(ann)
+        log.info("unlinking annotation %s with value %s", ann, ann.getValue())
+        to_delete.append(ann.link.id)
+    conn.deleteObjects("ImageAnnotationLink", to_delete, wait=True)
     annotate(conn, object_id, annotation, object_type)
 
 
